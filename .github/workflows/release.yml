@@ -107,12 +107,22 @@ jobs:
              su builder -c 'cd /pkg && makepkg --printsrcinfo > .SRCINFO'"
 
       - name: Push to AUR
-        uses: KSXGitHub/github-actions-deploy-aur@v2.7.2
-        with:
-          pkgname: tiger-tui
-          pkgbuild: ./PKGBUILD
-          commit_username: ${{ secrets.AUR_USERNAME }}
-          commit_email: ${{ secrets.AUR_EMAIL }}
-          ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
-          commit_message: "Update to ${{ github.ref_name }}"
-          allow_empty_commits: false
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.AUR_SSH_PRIVATE_KEY }}" > ~/.ssh/aur
+          chmod 600 ~/.ssh/aur
+          ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
+
+          git config --global user.name "${{ secrets.AUR_USERNAME }}"
+          git config --global user.email "${{ secrets.AUR_EMAIL }}"
+
+          GIT_SSH_COMMAND="ssh -i ~/.ssh/aur" \
+            git clone ssh://aur@aur.archlinux.org/tiger-tui.git /tmp/aur-pkg
+
+          cp PKGBUILD .SRCINFO /tmp/aur-pkg/
+          cd /tmp/aur-pkg
+
+          git add PKGBUILD .SRCINFO
+          git diff --staged --quiet && echo "Nothing to push" && exit 0
+          git commit -m "Update to ${{ github.ref_name }}"
+          GIT_SSH_COMMAND="ssh -i ~/.ssh/aur" git push origin master
