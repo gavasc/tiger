@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/gaio/tiger/internal/daemon"
+	"github.com/gavasc/tiger/internal/daemon"
 )
 
 func socketPath() string {

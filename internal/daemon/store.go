@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/gaio/tiger/internal/ipc"
+	"github.com/gavasc/tiger/internal/ipc"
 )
 
 func stateFile() string {

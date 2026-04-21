@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gaio/tiger/internal/ipc"
-	"github.com/gaio/tiger/internal/notify"
+	"github.com/gavasc/tiger/internal/ipc"
+	"github.com/gavasc/tiger/internal/notify"
 	"github.com/google/uuid"
 )
 

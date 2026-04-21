@@ -1,4 +1,4 @@
-module github.com/gaio/tiger
+module github.com/gavasc/tiger
 
 go 1.26.2
 

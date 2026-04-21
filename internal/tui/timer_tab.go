@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gaio/tiger/internal/ipc"
+	"github.com/gavasc/tiger/internal/ipc"
 )
 
 func renderTimerItem(it ipc.Item) string {

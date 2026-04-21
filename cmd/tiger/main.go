@@ -10,9 +10,9 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/gaio/tiger/internal/ipc"
-	"github.com/gaio/tiger/internal/tui"
-	"github.com/gaio/tiger/internal/waybar"
+	"github.com/gavasc/tiger/internal/ipc"
+	"github.com/gavasc/tiger/internal/tui"
+	"github.com/gavasc/tiger/internal/waybar"
 )
 
 func socketPath() string {

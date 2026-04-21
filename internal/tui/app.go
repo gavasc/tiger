@@ -8,7 +8,7 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/gaio/tiger/internal/ipc"
+	"github.com/gavasc/tiger/internal/ipc"
 )
 
 // tickMsg fires every 500ms to refresh item state from the daemon.

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gaio/tiger/internal/ipc"
+	"github.com/gavasc/tiger/internal/ipc"
 )
 
 type output struct {

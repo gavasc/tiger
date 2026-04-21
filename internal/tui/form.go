@@ -8,7 +8,7 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/gaio/tiger/internal/ipc"
+	"github.com/gavasc/tiger/internal/ipc"
 )
 
 type formMode int
