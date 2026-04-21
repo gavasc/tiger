@@ -1,0 +1,127 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build binaries
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - goarch: amd64
+            suffix: x86_64
+          - goarch: arm64
+            suffix: aarch64
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Build
+        env:
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 0
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          LDFLAGS="-s -w -X main.version=${VERSION}"
+          go build -trimpath -ldflags="${LDFLAGS}" -o tiger-${{ matrix.suffix }}  ./cmd/tiger
+          go build -trimpath -ldflags="${LDFLAGS}" -o tigerd-${{ matrix.suffix }} ./cmd/tigerd
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: binaries-${{ matrix.suffix }}
+          path: |
+            tiger-${{ matrix.suffix }}
+            tigerd-${{ matrix.suffix }}
+
+  release:
+    name: Create GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    outputs:
+      tarball_sha256: ${{ steps.checksum.outputs.sha256 }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: binaries-*
+          merge-multiple: true
+
+      - name: Make binaries executable
+        run: chmod +x tiger-* tigerd-*
+
+      - name: Compute source tarball checksum
+        id: checksum
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          URL="https://github.com/${{ github.repository }}/archive/${GITHUB_REF_NAME}.tar.gz"
+          curl -sL "$URL" -o source.tar.gz
+          SHA256=$(sha256sum source.tar.gz | cut -d' ' -f1)
+          echo "sha256=${SHA256}" >> "$GITHUB_OUTPUT"
+          echo "sha256: ${SHA256}"
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            tiger-x86_64
+            tigerd-x86_64
+            tiger-aarch64
+            tigerd-aarch64
+
+  aur:
+    name: Update AUR package
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update PKGBUILD version and checksum
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          sed -i "s/^pkgver=.*/pkgver=${VERSION}/" PKGBUILD
+          sed -i "s/^pkgrel=.*/pkgrel=1/" PKGBUILD
+          sed -i "s/sha256sums=('SKIP')/sha256sums=('${{ needs.release.outputs.tarball_sha256 }}')/" PKGBUILD
+          # If sha256sums was already set to a real hash, replace that too.
+          sed -i "s/sha256sums=('[0-9a-f]\{64\}')/sha256sums=('${{ needs.release.outputs.tarball_sha256 }}')/" PKGBUILD
+
+      - name: Generate .SRCINFO
+        uses: nicholasgasior/action-makepkg@v1.0.2
+        with:
+          args: --printsrcinfo
+        continue-on-error: true
+
+      # Fallback: generate .SRCINFO manually if the above action fails.
+      - name: Generate .SRCINFO (fallback)
+        run: |
+          if [ ! -f .SRCINFO ]; then
+            docker run --rm -v "$PWD":/pkg -w /pkg \
+              archlinux:latest bash -c \
+              "pacman -Sy --noconfirm base-devel go && \
+               useradd -m builder && \
+               chown -R builder /pkg && \
+               su builder -c 'cd /pkg && makepkg --printsrcinfo > .SRCINFO'"
+          fi
+
+      - name: Push to AUR
+        uses: KSXGitHub/github-actions-deploy-aur@v2.7.2
+        with:
+          pkgname: tiger-tui
+          pkgbuild: ./PKGBUILD
+          commit_username: ${{ secrets.AUR_USERNAME }}
+          commit_email: ${{ secrets.AUR_EMAIL }}
+          ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+          commit_message: "Update to ${{ github.ref_name }}"
+          allow_empty_commits: false

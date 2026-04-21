@@ -1,0 +1,13 @@
+#custom-tiger {
+    color: #29b6f6;
+    margin: 0 4px;
+    padding: 0 6px;
+}
+
+#custom-tiger.active {
+    color: #00e676;
+}
+
+#custom-tiger.error {
+    color: #ff5252;
+}

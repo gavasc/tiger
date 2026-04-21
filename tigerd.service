@@ -1,0 +1,11 @@
+[Unit]
+Description=Tiger alarm/timer daemon
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/tigerd
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target

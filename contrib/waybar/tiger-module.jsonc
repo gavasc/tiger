@@ -1,0 +1,11 @@
+// Tiger waybar module — add "custom/tiger" to your modules list,
+// then paste this block into your bar configuration in
+// ~/.config/waybar/config.jsonc
+"custom/tiger": {
+    "exec": "tiger waybar",
+    "interval": 2,
+    "return-type": "json",
+    "on-click": "tiger",
+    "tooltip": true,
+    "format": "{}"
+}
