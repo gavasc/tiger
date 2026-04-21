@@ -98,22 +98,13 @@ jobs:
           sed -i "s/sha256sums=('[0-9a-f]\{64\}')/sha256sums=('${{ needs.release.outputs.tarball_sha256 }}')/" PKGBUILD
 
       - name: Generate .SRCINFO
-        uses: nicholasgasior/action-makepkg@v1.0.2
-        with:
-          args: --printsrcinfo
-        continue-on-error: true
-
-      # Fallback: generate .SRCINFO manually if the above action fails.
-      - name: Generate .SRCINFO (fallback)
         run: |
-          if [ ! -f .SRCINFO ]; then
-            docker run --rm -v "$PWD":/pkg -w /pkg \
-              archlinux:latest bash -c \
-              "pacman -Sy --noconfirm base-devel go && \
-               useradd -m builder && \
-               chown -R builder /pkg && \
-               su builder -c 'cd /pkg && makepkg --printsrcinfo > .SRCINFO'"
-          fi
+          docker run --rm -v "$PWD":/pkg -w /pkg \
+            archlinux:latest bash -c \
+            "pacman -Sy --noconfirm base-devel go && \
+             useradd -m builder && \
+             chown -R builder /pkg && \
+             su builder -c 'cd /pkg && makepkg --printsrcinfo > .SRCINFO'"
 
       - name: Push to AUR
         uses: KSXGitHub/github-actions-deploy-aur@v2.7.2
